@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Subjects — StudyMind AI</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+
+    /* ---- Page layout ---- */
+    .subjects-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: var(--space-8);
+      align-items: flex-start;
+    }
+
+    /* ---- Section label ---- */
+    .section-eyebrow {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-4);
+    }
+
+    /* ---- Preset subjects grid ---- */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-3);
+      margin-bottom: var(--space-8);
+    }
+
+    .subj-card {
+      background: var(--bg-white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5) var(--space-4);
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+      position: relative;
+      user-select: none;
+    }
+    .subj-card:hover {
+      border-color: var(--accent-border);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .subj-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      box-shadow: var(--shadow-blue);
+    }
+    .subj-card .subj-icon {
+      font-size: 30px;
+      margin-bottom: var(--space-2);
+      display: block;
+    }
+    .subj-card .subj-name {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .subj-card .subj-desc {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      display: block;
+    }
+    /* Checkmark on selected */
+    .subj-card .tick {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 20px; height: 20px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .subj-card.selected .tick { display: flex; }
+
+    /* ---- Custom subject section ---- */
+    .custom-section {
+      margin-bottom: var(--space-8);
+    }
+    .add-row {
+      display: flex;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .add-row .input { flex: 1; }
+
+    /* Custom subject chips */
+    .custom-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      min-height: 40px;
+    }
+    .custom-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 6px 14px;
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      color: var(--blue-700);
+      animation: scaleIn 0.2s ease;
+    }
+    .custom-chip .chip-remove {
+      width: 16px; height: 16px;
+      background: var(--blue-200);
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      color: var(--blue-800);
+      transition: var(--transition);
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .custom-chip .chip-remove:hover {
+      background: var(--red-500);
+      color: white;
+    }
+    .no-custom {
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ---- Sidebar ---- */
+    .sidebar {
+      position: sticky;
+      top: calc(var(--nav-height) + var(--space-6));
+    }
+
+    /* Selected summary card */
+    .selected-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--space-4);
+    }
+    .selected-card-title {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .selected-count {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 2px 8px;
+    }
+    .selected-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      min-height: 80px;
+    }
+    .selected-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+      animation: slideIn 0.2s ease;
+    }
+    .selected-row .sr-icon { font-size: 15px; }
+    .selected-row .sr-name { flex: 1; color: var(--text-primary); }
+    .selected-row .sr-remove {
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: none;
+      transition: var(--transition);
+    }
+    .selected-row .sr-remove:hover { color: var(--red-600); background: var(--red-50); }
+
+    .empty-selection {
+      text-align: center;
+      padding: var(--space-6);
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+    }
+    .empty-selection .es-icon { font-size: 28px; margin-bottom: var(--space-2); }
+
+    /* Tip box */
+    .tip-box {
+      background: var(--amber-50);
+      border: 1px solid var(--amber-100);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      font-size: var(--text-xs);
+      color: var(--amber-700);
+      line-height: 1.6;
+    }
+    .tip-box strong {
+      display: block;
+      margin-bottom: var(--space-1);
+      font-weight: var(--weight-semibold);
+    }
+
+    /* Save button */
+    .save-btn-wrap {
+      position: sticky;
+      bottom: var(--space-6);
+    }
+
+    /* Min select warning */
+    .min-warning {
+      font-size: var(--text-xs);
+      color: var(--red-600);
+      margin-top: var(--space-2);
+      display: none;
+    }
+    .min-warning.show { display: block; }
+
+    @media (max-width: 768px) {
+      .subjects-layout {
+        grid-template-columns: 1fr;
+      }
+      .preset-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div id="navbar"></div>
+</nav>
+
+<div class="wrap">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <span>Setup</span>
+      <span>›</span>
+      <span>My Subjects</span>
+    </div>
+    <h1>Choose Your Subjects</h1>
+    <p>Select the subjects you want to study. Everything — quizzes, plans, reports — will be personalised to your choices.</p>
+  </div>
+
+  <div class="subjects-layout">
+
+    <!-- LEFT — subject selection -->
+    <div class="subjects-left">
+
+      <!-- Preset subjects -->
+      <div class="section-eyebrow">Preset Subjects</div>
+      <div class="preset-grid" id="preset-grid">
+        <!-- Built by JS -->
+      </div>
+
+      <!-- Custom subjects -->
+      <div class="custom-section">
+        <div class="section-eyebrow">Add Your Own Subject</div>
+        <div class="add-row">
+          <input
+            class="input"
+            id="custom-input"
+            type="text"
+            placeholder="e.g. Sanskrit, Economics, Psychology..."
+            maxlength="30"
+            autocomplete="off"
+          />
+          <button class="btn btn-secondary" onclick="addCustomSubject()">+ Add</button>
+        </div>
+        <div class="custom-chips" id="custom-chips">
+          <span class="no-custom" id="no-custom-msg">No custom subjects added yet.</span>
+        </div>
+      </div>
+
+    </div><!-- /subjects-left -->
+
+    <!-- RIGHT — sidebar summary -->
+    <div class="sidebar">
+
+      <!-- Selected summary -->
+      <div class="selected-card">
+        <div class="selected-card-title">
+          Selected Subjects
+          <span class="selected-count" id="sel-count">0 selected</span>
+        </div>
+        <div class="selected-list" id="selected-list">
+          <div class="empty-selection">
+            <div class="es-icon">📚</div>
+            Select at least 1 subject to continue
+          </div>
+        </div>
+        <p class="min-warning" id="min-warning">
+          ⚠️ Please select at least 1 subject!
+        </p>
+      </div>
+
+      <!-- Tip -->
+      <div class="tip-box">
+        <strong>💡 Tip</strong>
+        You can always change your subjects later from the navbar. Your quiz history and progress will be kept for each subject separately.
+      </div>
+
+      <!-- Save button -->
+      <div class="save-btn-wrap">
+        <button
+          class="btn btn-primary w-full btn-lg"
+          onclick="saveSubjects()"
+          id="save-btn"
+        >
+          Save & Continue →
+        </button>
+      </div>
+
+    </div><!-- /sidebar -->
+
+  </div><!-- /subjects-layout -->
+
+</div><!-- /wrap -->
+
+<script src="js/main.js"></script>
+<script src="js/subjects.js"></script>
+</body>
+</html>

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Study Plan — StudyMind AI</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+
+    /* ── Hero banner ── */
+    .plan-hero {
+      background: var(--gray-900);
+      color: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-8) var(--space-8);
+      margin-bottom: var(--space-6);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--space-6);
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-hero::before {
+      content: '';
+      position: absolute;
+      right: -60px; top: -60px;
+      width: 220px; height: 220px;
+      background: var(--accent);
+      opacity: 0.08;
+      border-radius: 50%;
+    }
+    .ph-eyebrow {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue-400);
+      margin-bottom: var(--space-2);
+    }
+    .ph-title {
+      font-size: var(--text-2xl);
+      font-weight: var(--weight-semibold);
+      letter-spacing: -0.3px;
+      margin-bottom: var(--space-2);
+    }
+    .ph-sub { font-size: var(--text-sm); color: rgba(255,255,255,0.6); line-height: 1.6; }
+    .ph-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+      padding: 5px 14px;
+      background: rgba(37,99,235,0.25);
+      border: 1px solid rgba(37,99,235,0.4);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      color: var(--blue-200);
+    }
+    .ph-right { text-align: center; z-index: 1; }
+    .ph-days-num {
+      font-size: 56px;
+      font-weight: var(--weight-semibold);
+      color: var(--accent);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .ph-days-label { font-size: var(--text-xs); color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+    /* ── Section header ── */
+    .section-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+    .section-hdr h2 {
+      font-size: var(--text-lg);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+
+    /* ── Spaced repetition section ── */
+    .spaced-section {
+      margin-bottom: var(--space-6);
+    }
+    .spaced-empty {
+      background: var(--green-50);
+      border: 1px solid var(--green-100);
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-5);
+      font-size: var(--text-sm);
+      color: var(--green-700);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .spaced-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+    }
+    .spaced-list { display: flex; flex-direction: column; gap: var(--space-3); }
+    .spaced-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      background: var(--amber-50);
+      border: 1px solid var(--amber-100);
+      border-radius: var(--radius-md);
+    }
+    .si-icon { font-size: 20px; flex-shrink: 0; }
+    .si-body { flex: 1; }
+    .si-title {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--amber-800);
+    }
+    .si-sub {
+      font-size: var(--text-xs);
+      color: var(--amber-600);
+      margin-top: 2px;
+    }
+    .si-btn {
+      padding: 6px 14px;
+      background: var(--amber-600);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: var(--font);
+      flex-shrink: 0;
+    }
+    .si-btn:hover { background: var(--amber-700); }
+
+    /* ── Weekly plan grid ── */
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+    .week-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      border-left: 4px solid var(--accent);
+      transition: var(--transition);
+      position: relative;
+    }
+    .week-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .week-card.focus    { border-left-color: var(--red-500); }
+    .week-card.review   { border-left-color: var(--green-500); }
+    .week-card.practice { border-left-color: var(--blue-500); }
+    .week-card.rest     { border-left-color: var(--gray-300); opacity: 0.7; }
+    .wc-day {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-2);
+    }
+    .wc-subject {
+      font-size: var(--text-base);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .wc-topic {
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+      line-height: 1.4;
+    }
+    .wc-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+    }
+    .wc-type-badge.focus    { background: var(--red-50);   color: var(--red-700);   border: 1px solid var(--red-100); }
+    .wc-type-badge.review   { background: var(--green-50); color: var(--green-700); border: 1px solid var(--green-100); }
+    .wc-type-badge.practice { background: var(--blue-50);  color: var(--blue-700);  border: 1px solid var(--blue-100); }
+    .wc-type-badge.rest     { background: var(--gray-100); color: var(--gray-500);  border: 1px solid var(--gray-200); }
+    .wc-intensity {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      font-size: 16px;
+    }
+
+    /* ── Reminders ── */
+    .reminders-section { margin-bottom: var(--space-8); }
+    .reminder-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-3);
+      transition: var(--transition);
+    }
+    .reminder-item:hover { box-shadow: var(--shadow-sm); }
+    .ri-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .ri-dot.blue   { background: var(--accent); }
+    .ri-dot.green  { background: var(--green-500); }
+    .ri-dot.amber  { background: var(--amber-500); }
+    .ri-dot.red    { background: var(--red-500); }
+    .ri-body { flex: 1; }
+    .ri-text { font-size: var(--text-sm); color: var(--text-primary); }
+    .ri-sub  { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
+    .ri-time {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    /* ── Goals checklist ── */
+    .goals-section { margin-bottom: var(--space-8); }
+    .goals-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+    }
+    .goals-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+    .goals-card-title {
+      font-size: var(--text-base);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+    }
+    .goals-prog-badge {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 2px 10px;
+    }
+    .goal-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .goal-row:last-of-type { border-bottom: none; }
+    .gcheck {
+      width: 18px; height: 18px;
+      border: 1.5px solid var(--border-dark);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; transition: var(--transition);
+      background: var(--bg-white); color: transparent;
+    }
+    .gcheck.checked { background: var(--accent); border-color: var(--accent); color: white; }
+    .gtext { font-size: var(--text-sm); color: var(--text-primary); flex: 1; }
+    .gtext.done { text-decoration: line-through; color: var(--text-muted); }
+    .gxp { font-size: var(--text-xs); color: var(--accent); font-weight: var(--weight-medium); }
+    .no-goals { text-align: center; padding: var(--space-5); color: var(--text-muted); font-size: var(--text-sm); }
+    .add-goal-row { display: flex; gap: var(--space-2); margin-top: var(--space-4); }
+    .add-goal-row .input { flex: 1; font-size: var(--text-sm); padding: 8px 12px; }
+
+    @media (max-width: 768px) {
+      .plan-hero    { grid-template-columns: 1fr; }
+      .ph-right     { display: none; }
+      .week-grid    { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .week-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar"><div id="navbar"></div></nav>
+
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="plan-hero">
+    <div class="ph-left">
+      <div class="ph-eyebrow">AI Powered</div>
+      <div class="ph-title">Your Weekly Study Plan</div>
+      <div class="ph-sub">Personalised based on your Hindsight memory — focused on your weakest areas first.</div>
+      <div class="ph-badge">🧠 Hindsight memory active</div>
+    </div>
+    <div class="ph-right">
+      <div class="ph-days-num" id="ph-days">—</div>
+      <div class="ph-days-label">days to exam</div>
+    </div>
+  </div>
+
+  <!-- Spaced Repetition -->
+  <div class="spaced-section">
+    <div class="section-hdr">
+      <h2>🔄 Due for Revision Today</h2>
+      <span style="font-size:var(--text-xs);color:var(--text-muted)">Based on spaced repetition</span>
+    </div>
+    <div id="spaced-container"></div>
+  </div>
+
+  <!-- Weekly Plan -->
+  <div class="section-hdr">
+    <h2>📅 This Week's Plan</h2>
+    <button class="btn btn-secondary btn-sm" onclick="regeneratePlan()">↻ Regenerate</button>
+  </div>
+  <div class="week-grid" id="week-grid">
+    <!-- Built by JS -->
+  </div>
+
+  <!-- Reminders -->
+  <div class="reminders-section">
+    <div class="section-hdr">
+      <h2>🔔 Smart Reminders</h2>
+    </div>
+    <div id="reminders-list"></div>
+  </div>
+
+  <!-- Daily Goals -->
+  <div class="goals-section">
+    <div class="section-hdr">
+      <h2>📌 Today's Goals</h2>
+    </div>
+    <div class="goals-card">
+      <div class="goals-card-header">
+        <span class="goals-card-title">What do you want to achieve today?</span>
+        <span class="goals-prog-badge" id="goals-prog">0 / 0 done</span>
+      </div>
+      <div id="goals-list"></div>
+      <div class="add-goal-row">
+        <input class="input" id="goal-input" type="text" placeholder="Add a study goal..." maxlength="60" autocomplete="off"/>
+        <button class="btn btn-primary btn-sm" onclick="addGoalUI()">Add</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!isOnboardingDone()) { window.location.href = 'onboarding.html'; return; }
+  buildNavbar('study-plan');
+  renderExamDays();
+  renderSpaced();
+  renderWeekPlan();
+  renderReminders();
+  renderGoals();
+
+  document.getElementById('goal-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addGoalUI();
+  });
+});
+
+// ── Exam days ──
+function renderExamDays() {
+  const days = getDaysUntilExam();
+  const el   = document.getElementById('ph-days');
+  if (el) el.textContent = days !== null ? days : '—';
+}
+
+// ── Spaced repetition ──
+function renderSpaced() {
+  const due       = getDueTopics();
+  const container = document.getElementById('spaced-container');
+  if (!container) return;
+
+  if (due.length === 0) {
+    container.innerHTML = `
+      <div class="spaced-empty">
+        ✅ No topics due for revision today — you're all caught up!
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="spaced-card">
+      <div class="spaced-list">
+        ${due.map(item => `
+          <div class="spaced-item" id="spaced-${item.topic.replace(/\s/g,'_')}">
+            <span class="si-icon">🔁</span>
+            <div class="si-body">
+              <div class="si-title">${item.topic}</div>
+              <div class="si-sub">${item.subject} · Wrong ${item.timesWrong} time${item.timesWrong > 1 ? 's' : ''} · Due since ${formatDateShort(item.nextRevision)}</div>
+            </div>
+            <button class="si-btn" onclick="markRevised('${item.subject}','${item.topic}')">
+              Mark Revised ✓
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function markRevised(subject, topic) {
+  const nextDate = markTopicRevised(subject, topic);
+  addXP('wrong_revised');
+  showToast(`✅ "${topic}" marked as revised! Next review in ${nextDate} days.`, 'success');
+
+  // Remove from UI
+  const key = topic.replace(/\s/g, '_');
+  const el  = document.getElementById(`spaced-${key}`);
+  if (el) {
+    el.style.opacity    = '0';
+    el.style.transition = 'opacity 0.3s';
+    setTimeout(() => { el.remove(); renderSpaced(); }, 300);
+  }
+}
+
+// ── Weekly plan ──
+function renderWeekPlan() {
+  const subjects   = getSelectedSubjects();
+  const weakTopics = getAllWeakTopics();
+  const grid       = document.getElementById('week-grid');
+  if (!grid) return;
+
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  // Sort: weakest subjects first
+  const sorted = [...subjects].sort((a,b) => getOverallAccuracy(a) - getOverallAccuracy(b));
+
+  const plan = days.map((day, i) => {
+    if (i === 6) return { day, subject: 'Rest / Mock Test', topic: 'Full revision or take a mock test', type: 'rest', icon: '😴' };
+
+    const subject = sorted[i % sorted.length] || subjects[0] || 'General';
+    const weak    = (weakTopics[subject] || [])[0];
+    const acc     = getOverallAccuracy(subject);
+    const type    = acc < 50 ? 'focus' : acc < 75 ? 'practice' : 'review';
+
+    const typeLabel = type === 'focus' ? '🔴 Focus area' : type === 'practice' ? '📝 Practice' : '✅ Review';
+    const intensity = acc < 50 ? '🔥' : acc < 75 ? '💪' : '✨';
+
+    return {
+      day,
+      subject,
+      topic: weak ? `Focus: ${weak}` : 'General practice',
+      type,
+      typeLabel,
+      intensity,
+      icon: getSubjectIcon(subject),
+    };
+  });
+
+  grid.innerHTML = plan.map(p => `
+    <div class="week-card ${p.type}">
+      <div class="wc-day">${p.day}</div>
+      <div class="wc-subject">${p.icon || '📚'} ${p.subject}</div>
+      <div class="wc-topic">${p.topic}</div>
+      <span class="wc-type-badge ${p.type}">${p.typeLabel || p.type}</span>
+      <span class="wc-intensity">${p.intensity || ''}</span>
+    </div>
+  `).join('');
+}
+
+function regeneratePlan() {
+  renderWeekPlan();
+  showToast('Study plan refreshed! 📅', 'success');
+}
+
+// ── Reminders ──
+function renderReminders() {
+  const subjects   = getSelectedSubjects();
+  const weakTopics = getAllWeakTopics();
+  const days       = getDaysUntilExam();
+  const due        = getDueTopics();
+  const list       = document.getElementById('reminders-list');
+  if (!list) return;
+
+  const reminders = [];
+
+  // Spaced repetition reminders
+  if (due.length > 0) {
+    reminders.push({
+      dot:  'amber',
+      text: `🔄 ${due.length} topic${due.length > 1 ? 's' : ''} due for spaced revision today`,
+      sub:  due.map(d => d.topic).join(', '),
+      time: 'Today',
+    });
+  }
+
+  // Exam countdown reminder
+  if (days !== null && days <= 30) {
+    reminders.push({
+      dot:  days <= 7 ? 'red' : 'blue',
+      text: days <= 7
+        ? `🚨 Exam in ${days} days — focus on weak topics NOW!`
+        : `📅 Exam in ${days} days — stay consistent with your plan`,
+      sub:  'Set by your onboarding exam date',
+      time: `${days} days left`,
+    });
+  }
+
+  // Weak topic reminders
+  const allWeak = Object.values(weakTopics).flat();
+  if (allWeak.length > 0) {
+    reminders.push({
+      dot:  'red',
+      text: `⚠️ You have ${allWeak.length} weak topic${allWeak.length > 1 ? 's' : ''} to work on`,
+      sub:  allWeak.slice(0, 3).join(', ') + (allWeak.length > 3 ? '...' : ''),
+      time: 'Ongoing',
+    });
+  }
+
+  // Streak reminder
+  const streak = getStreak();
+  reminders.push({
+    dot:  'green',
+    text: streak > 1
+      ? `🔥 You're on a ${streak}-day streak — don't break it!`
+      : '🎯 Start your study streak today — 1 quiz a day keeps failure away!',
+    sub:  'Daily habit reminder',
+    time: 'Daily',
+  });
+
+  if (reminders.length === 0) {
+    list.innerHTML = '<p style="color:var(--text-muted);font-size:var(--text-sm)">No reminders right now — great job staying on track!</p>';
+    return;
+  }
+
+  list.innerHTML = reminders.map(r => `
+    <div class="reminder-item">
+      <div class="ri-dot ${r.dot}"></div>
+      <div class="ri-body">
+        <div class="ri-text">${r.text}</div>
+        <div class="ri-sub">${r.sub}</div>
+      </div>
+      <span class="ri-time">${r.time}</span>
+    </div>
+  `).join('');
+}
+
+// ── Goals ──
+function renderGoals() {
+  const goals = getTodayGoals();
+  const list  = document.getElementById('goals-list');
+  const prog  = document.getElementById('goals-prog');
+  const done  = goals.filter(g => g.done).length;
+  if (prog) prog.textContent = `${done} / ${goals.length} done`;
+  if (!list) return;
+  if (goals.length === 0) { list.innerHTML = '<div class="no-goals">No goals yet — add one below!</div>'; return; }
+  list.innerHTML = goals.map(g => `
+    <div class="goal-row">
+      <div class="gcheck ${g.done ? 'checked' : ''}" onclick="toggleGoalUI(${g.id})">${g.done ? '✓' : ''}</div>
+      <span class="gtext ${g.done ? 'done' : ''}">${g.text}</span>
+      <span class="gxp">+20 XP</span>
+    </div>`).join('');
+}
+
+function addGoalUI() {
+  const input = document.getElementById('goal-input');
+  const text  = input.value.trim();
+  if (!text) { input.focus(); return; }
+  saveGoal(text);
+  input.value = '';
+  renderGoals();
+  showToast('Goal added! +20 XP when done 🎯', 'info');
+}
+
+function toggleGoalUI(id) {
+  toggleGoal(id);
+  renderGoals();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weak Topics — StudyMind AI</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+
+    /* ── AI tip box ── */
+    .ai-tip-box {
+      background: var(--gray-900);
+      color: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-6) var(--space-8);
+      margin-bottom: var(--space-6);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-5);
+    }
+    .ai-tip-icon { font-size: 32px; flex-shrink: 0; }
+    .ai-tip-body { flex: 1; }
+    .ai-tip-label {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue-400);
+      margin-bottom: var(--space-2);
+    }
+    .ai-tip-text {
+      font-size: var(--text-base);
+      color: rgba(255,255,255,0.85);
+      line-height: 1.7;
+    }
+    .ai-tip-text.loading {
+      color: rgba(255,255,255,0.4);
+      font-style: italic;
+    }
+
+    /* ── Filter row ── */
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      color: var(--text-secondary);
+      background: var(--bg-white);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: var(--font);
+    }
+    .filter-btn:hover  { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    /* ── Topics grid ── */
+    .topics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-5);
+      margin-bottom: var(--space-8);
+    }
+
+    /* ── Topic card ── */
+    .topic-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+    .topic-card:hover { border-color: var(--red-100); box-shadow: var(--shadow-md); }
+
+    /* Card header */
+    .tc-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-3);
+    }
+    .tc-left { flex: 1; }
+    .tc-name {
+      font-size: var(--text-base);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-1);
+    }
+    .tc-subject {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      color: var(--text-secondary);
+    }
+    .tc-trend {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tc-trend.up   { background: var(--green-50);  color: var(--green-700);  border: 1px solid var(--green-100); }
+    .tc-trend.down { background: var(--red-50);    color: var(--red-700);    border: 1px solid var(--red-100); }
+    .tc-trend.flat { background: var(--gray-100);  color: var(--gray-500);   border: 1px solid var(--gray-200); }
+
+    /* Mistake count + bar */
+    .tc-mistakes {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      margin-bottom: var(--space-2);
+    }
+    .tc-bar-wrap {
+      background: var(--gray-100);
+      border-radius: var(--radius-full);
+      height: 6px;
+      overflow: hidden;
+    }
+    .tc-bar-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: var(--red-500);
+      transition: width 0.6s ease;
+    }
+
+    /* Revision question */
+    .tc-revision {
+      background: var(--amber-50);
+      border: 1px solid var(--amber-100);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+    }
+    .tc-rev-label {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--amber-600);
+      margin-bottom: var(--space-1);
+      display: block;
+    }
+    .tc-rev-text {
+      font-size: var(--text-sm);
+      color: var(--amber-700);
+      line-height: 1.5;
+    }
+
+    /* Note box */
+    .tc-note {
+      background: var(--blue-50);
+      border: 1px solid var(--blue-100);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+    }
+    .tc-note-label {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--blue-600);
+      margin-bottom: var(--space-1);
+      display: block;
+    }
+    .tc-note-input {
+      width: 100%;
+      background: none;
+      border: none;
+      outline: none;
+      font-size: var(--text-sm);
+      color: var(--blue-700);
+      font-family: var(--font);
+      resize: none;
+      min-height: 48px;
+      line-height: 1.6;
+    }
+    .tc-note-input::placeholder { color: var(--blue-400); opacity: 0.7; }
+
+    /* Card footer */
+    .tc-footer {
+      display: flex;
+      gap: var(--space-2);
+    }
+    .tc-footer .btn { flex: 1; font-size: var(--text-xs); padding: 7px; }
+
+    /* Empty state */
+    .empty-topics {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: var(--space-16);
+      background: var(--bg-white);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-lg);
+    }
+    .empty-topics .et-icon { font-size: 48px; margin-bottom: var(--space-4); }
+    .empty-topics h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+    .empty-topics p { color: var(--text-secondary); font-size: var(--text-base); margin-bottom: var(--space-5); }
+
+    @media (max-width: 768px) {
+      .topics-grid { grid-template-columns: 1fr; }
+      .ai-tip-box  { flex-direction: column; gap: var(--space-3); }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar"><div id="navbar"></div></nav>
+
+<div class="wrap">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <h1>Weak Topics Tracker</h1>
+    <p>Topics where you've made mistakes — powered by Hindsight memory.</p>
+  </div>
+
+  <!-- AI Recommendation -->
+  <div class="ai-tip-box">
+    <div class="ai-tip-icon">🤖</div>
+    <div class="ai-tip-body">
+      <div class="ai-tip-label">AI Recommendation · Hindsight Powered</div>
+      <div class="ai-tip-text loading" id="ai-tip-text">
+        Analysing your Hindsight memory...
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter row -->
+  <div class="filter-row" id="filter-row">
+    <button class="filter-btn active" data-filter="all" onclick="filterTopics('all', this)">
+      All Topics
+    </button>
+    <!-- Subject filters built by JS -->
+  </div>
+
+  <!-- Topics grid -->
+  <div class="topics-grid" id="topics-grid">
+    <!-- Built by JS -->
+  </div>
+
+</div>
+
+<script src="js/main.js"></script>
+<script>
+
+// Practice questions per topic (backend teammate extends this)
+const PRACTICE_QUESTIONS = {
+  'Algebra':         'Solve: 5x + 3 = 2x + 12',
+  'Geometry':        'Find the area of a triangle with base 10cm and height 6cm.',
+  'Multiplication':  'What is 14 × 13?',
+  'Fractions':       'Simplify: 12/16',
+  'Statistics':      'Find the median of: 3, 7, 1, 9, 4',
+  'Photosynthesis':  'Write the equation for photosynthesis.',
+  'Physics':         'A 5kg object accelerates at 3 m/s². What force acts on it?',
+  'Chemistry':       'What is the chemical formula for water?',
+  'Biology':         'Name the organelle that produces energy in a cell.',
+  'Indian History':  'Who led the Salt March of 1930?',
+  'World History':   'In which year did the Berlin Wall fall?',
+  'Grammar':         'Correct the sentence: "She don\'t like apples."',
+  'Vocabulary':      'Use "benevolent" in a sentence.',
+  'World':           'Name the five oceans of the world.',
+  'India':           'Which is the largest state in India by area?',
+  'Climate':         'What causes the monsoon season in India?',
+  'Basics':          'What does RAM stand for?',
+  'Programming':     'Write a loop to print numbers 1 to 5 in Python.',
+  'Networking':      'What is the difference between TCP and UDP?',
+  'Data Structures': 'Explain the difference between a stack and a queue.',
+};
+
+let currentFilter = 'all';
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!isOnboardingDone()) { window.location.href = 'onboarding.html'; return; }
+  buildNavbar('weak-topics');
+  buildFilterButtons();
+  renderTopics('all');
+  loadAITip();
+
+  // Check URL param ?subject=Mathematics
+  const urlSubject = new URLSearchParams(window.location.search).get('subject');
+  if (urlSubject) filterTopics(urlSubject, null);
+});
+
+// ── Build filter buttons ──
+function buildFilterButtons() {
+  const subjects = getSelectedSubjects();
+  const row      = document.getElementById('filter-row');
+  if (!row) return;
+
+  subjects.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className       = 'filter-btn';
+    btn.dataset.filter  = s;
+    btn.textContent     = `${getSubjectIcon(s)} ${s}`;
+    btn.onclick         = () => filterTopics(s, btn);
+    row.appendChild(btn);
+  });
+}
+
+// ── Filter topics ──
+function filterTopics(filter, btn) {
+  currentFilter = filter;
+
+  // Update active button
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    // Activate matching button
+    const matching = document.querySelector(`.filter-btn[data-filter="${filter}"]`);
+    if (matching) matching.classList.add('active');
+    else document.querySelector('.filter-btn[data-filter="all"]')?.classList.add('active');
+  }
+
+  renderTopics(filter);
+}
+
+// ── Render topic cards ──
+function renderTopics(filter) {
+  const allWeak  = getAllWeakTopics();
+  const subjects = getSelectedSubjects();
+  const grid     = document.getElementById('topics-grid');
+  if (!grid) return;
+
+  // Collect all topic entries
+  const entries = [];
+  subjects.forEach(s => {
+    if (filter !== 'all' && filter !== s) return;
+    const topics = allWeak[s] || [];
+    topics.forEach(t => {
+      const count   = getMistakeCount(s, t);
+      const wrongLog= loadData(KEYS.WRONG_ANSWERS, []);
+      const recent  = wrongLog.filter(w => w.subject === s && w.topic === t).slice(-3);
+      entries.push({ subject: s, topic: t, count, recent });
+    });
+  });
+
+  if (entries.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-topics">
+        <div class="et-icon">🎉</div>
+        <h3>${filter === 'all' ? 'No weak topics yet!' : `No weak topics in ${filter}!`}</h3>
+        <p>${filter === 'all'
+          ? 'Take a quiz to start tracking your weak areas.'
+          : `You haven't made any mistakes in ${filter} yet. Keep it up!`}
+        </p>
+        <a href="quiz.html" class="btn btn-primary">Take a Quiz →</a>
+      </div>`;
+    return;
+  }
+
+  // Sort: most mistakes first
+  entries.sort((a, b) => b.count - a.count);
+  const maxCount = Math.max(...entries.map(e => e.count), 1);
+
+  grid.innerHTML = entries.map(e => {
+    const barWidth   = Math.round((e.count / maxCount) * 100);
+    const practiceQ  = PRACTICE_QUESTIONS[e.topic] || `Review your notes on ${e.topic} and try a practice question.`;
+    const savedNote  = getNote(e.subject, e.topic);
+
+    // Trend — check if last 2 wrong answers are getting better
+    const wrongLog = loadData(KEYS.WRONG_ANSWERS, []);
+    const topicLog = wrongLog.filter(w => w.subject === e.subject && w.topic === e.topic);
+    const trend    = topicLog.length >= 3 ? 'down' : topicLog.length === 1 ? 'flat' : 'flat';
+    const trendLabel = trend === 'up'   ? '↑ Improving'
+                     : trend === 'down' ? '↓ Needs work'
+                     : '— Keep trying';
+    const trendClass = trend;
+
+    return `
+      <div class="topic-card" id="tc-${e.subject.replace(/\s/g,'_')}-${e.topic.replace(/\s/g,'_')}">
+
+        <!-- Header -->
+        <div class="tc-header">
+          <div class="tc-left">
+            <div class="tc-name">${e.topic}</div>
+            <span class="tc-subject">${getSubjectIcon(e.subject)} ${e.subject}</span>
+          </div>
+          <span class="tc-trend ${trendClass}">${trendLabel}</span>
+        </div>
+
+        <!-- Mistake count + bar -->
+        <div>
+          <div class="tc-mistakes">${e.count} mistake${e.count > 1 ? 's' : ''} recorded</div>
+          <div class="tc-bar-wrap">
+            <div class="tc-bar-fill" style="width:${barWidth}%"></div>
+          </div>
+        </div>
+
+        <!-- Practice question -->
+        <div class="tc-revision">
+          <span class="tc-rev-label">💡 Practice Question</span>
+          <div class="tc-rev-text">${practiceQ}</div>
+        </div>
+
+        <!-- Personal note -->
+        <div class="tc-note">
+          <span class="tc-note-label">📝 My Notes</span>
+          <textarea
+            class="tc-note-input"
+            placeholder="Add your own revision notes here..."
+            onblur="saveNoteUI('${e.subject}', '${e.topic}', this.value)"
+          >${savedNote}</textarea>
+        </div>
+
+        <!-- Footer actions -->
+        <div class="tc-footer">
+          <a href="quiz.html?subject=${encodeURIComponent(e.subject)}" class="btn btn-primary">
+            Practice Quiz →
+          </a>
+          <a href="report.html?subject=${encodeURIComponent(e.subject)}" class="btn btn-secondary">
+            View Report
+          </a>
+        </div>
+
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Save note ──
+function saveNoteUI(subject, topic, note) {
+  if (note.trim()) {
+    saveNote(subject, topic, note.trim());
+    showToast('Note saved! 📝', 'info', 1500);
+  }
+}
+
+// ── AI tip ──
+async function loadAITip() {
+  const el       = document.getElementById('ai-tip-text');
+  const allWeak  = getAllWeakTopics();
+  const subjects = getSelectedSubjects();
+  const allTopics = Object.values(allWeak).flat();
+
+  if (allTopics.length === 0) {
+    el.textContent = 'Complete a quiz to get personalised AI recommendations based on your Hindsight memory!';
+    el.classList.remove('loading');
+    return;
+  }
+
+  // Try backend
+  try {
+    const data = await apiCall('/api/ai/subject-tips', 'POST', {
+      user_id: getUserId(),
+      subject: 'all',
+    });
+    if (data && data.tip) {
+      el.textContent = data.tip;
+      el.classList.remove('loading');
+      return;
+    }
+  } catch (e) { /* fallback */ }
+
+  // Local fallback
+  const worstSubject = subjects.reduce((worst, s) => {
+    return getOverallAccuracy(s) < getOverallAccuracy(worst) ? s : worst;
+  }, subjects[0] || '');
+
+  const topicList = allTopics.slice(0, 3).join(', ');
+  el.textContent = `Your Hindsight memory shows you need to focus on: ${topicList}. ${
+    worstSubject ? `${worstSubject} needs the most attention (${getOverallAccuracy(worstSubject)}% accuracy). ` : ''
+  }Practice these weak topics before your next quiz to see improvement!`;
+  el.classList.remove('loading');
+}
+</script>
+</body>
+</html>
