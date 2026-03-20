@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Subject Report — StudyMind AI</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+
+    /* ── Subject selector (when no subject in URL) ── */
+    .subject-pick {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-10);
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .subject-pick h2 { font-size: var(--text-2xl); font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
+    .subject-pick p  { color: var(--text-secondary); margin-bottom: var(--space-6); }
+    .pick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-3);
+    }
+    .pick-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+      text-decoration: none;
+      display: block;
+      color: var(--text-primary);
+    }
+    .pick-card:hover { border-color: var(--accent); background: var(--accent-light); transform: translateY(-2px); }
+    .pick-card .pc-icon { font-size: 28px; display: block; margin-bottom: var(--space-2); }
+    .pick-card .pc-name { font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+    .pick-card .pc-acc  { font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Report content ── */
+    .report-content { display: none; }
+    .report-content.show { display: block; }
+
+    /* Subject header */
+    .report-header {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6) var(--space-8);
+      margin-bottom: var(--space-6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+    .rh-left { display: flex; align-items: center; gap: var(--space-4); }
+    .rh-icon { font-size: 40px; }
+    .rh-name {
+      font-size: var(--text-2xl);
+      font-weight: var(--weight-semibold);
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+    .rh-meta { font-size: var(--text-sm); color: var(--text-muted); margin-top: 2px; }
+    .rh-right { display: flex; gap: var(--space-3); }
+
+    /* ── Circular rings row ── */
+    .rings-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-5);
+      margin-bottom: var(--space-6);
+    }
+    .ring-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .ring-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .ring-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-3);
+    }
+    .ring-wrap svg { display: block; }
+    .ring-center {
+      position: absolute;
+      text-align: center;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .ring-pct {
+      font-size: var(--text-xl);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      line-height: 1;
+      display: block;
+    }
+    .ring-lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 2px;
+    }
+    .ring-title {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .ring-sub { font-size: var(--text-xs); color: var(--text-muted); }
+
+    /* ── Stat cards ── */
+    .report-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+    .rs-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+    }
+    .rs-icon  { font-size: 18px; margin-bottom: var(--space-2); display: block; }
+    .rs-val   { font-size: var(--text-2xl); font-weight: var(--weight-semibold); letter-spacing: -0.3px; color: var(--text-primary); margin-bottom: 2px; }
+    .rs-label { font-size: var(--text-xs); color: var(--text-secondary); }
+
+    /* ── Line chart (SVG) ── */
+    .chart-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+      box-shadow: var(--shadow-sm);
+    }
+    .chart-card-title {
+      font-size: var(--text-base);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-5);
+    }
+    .chart-svg-wrap { width: 100%; overflow-x: auto; }
+    .no-chart {
+      text-align: center;
+      padding: var(--space-8);
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+    }
+
+    /* ── Two column ── */
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-5);
+      margin-bottom: var(--space-6);
+    }
+    .report-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+    }
+    .report-card-title {
+      font-size: var(--text-base);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    /* Weak topics breakdown */
+    .weak-breakdown { display: flex; flex-direction: column; gap: var(--space-3); }
+    .wb-item { width: 100%; }
+    .wb-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-1);
+    }
+    .wb-name  { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+    .wb-count { font-size: var(--text-xs); color: var(--text-muted); }
+    .wb-bar-wrap { background: var(--gray-100); border-radius: var(--radius-full); height: 6px; overflow: hidden; }
+    .wb-bar-fill { height: 100%; border-radius: var(--radius-full); background: var(--red-500); }
+
+    /* Quiz history timeline */
+    .timeline { display: flex; flex-direction: column; gap: var(--space-3); }
+    .tl-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-3) var(--space-4);
+      background: var(--bg-subtle);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .tl-item:hover { border-color: var(--accent-border); }
+    .tl-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .tl-dot.high   { background: var(--green-500); }
+    .tl-dot.medium { background: var(--amber-500); }
+    .tl-dot.low    { background: var(--red-500); }
+    .tl-body { flex: 1; }
+    .tl-date  { font-size: var(--text-xs); color: var(--text-muted); }
+    .tl-score { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--text-primary); }
+    .tl-right { text-align: right; }
+    .tl-pct   { font-size: var(--text-base); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
+    .tl-pct.high   { color: var(--green-600); }
+    .tl-pct.medium { color: var(--amber-600); }
+    .tl-pct.low    { color: var(--red-600); }
+    .tl-delta { font-size: var(--text-xs); font-weight: var(--weight-medium); }
+    .tl-delta.up   { color: var(--green-600); }
+    .tl-delta.down { color: var(--red-600); }
+
+    /* ── AI tips ── */
+    .ai-tips-card {
+      background: var(--gray-900);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+      box-shadow: var(--shadow-sm);
+    }
+    .at-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+    .at-title {
+      font-size: var(--text-base);
+      font-weight: var(--weight-semibold);
+      color: white;
+    }
+    .at-badge {
+      padding: 3px 10px;
+      background: rgba(37,99,235,0.3);
+      border: 1px solid rgba(37,99,235,0.4);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      color: var(--blue-200);
+    }
+    .at-text {
+      font-size: var(--text-base);
+      color: rgba(255,255,255,0.75);
+      line-height: 1.8;
+    }
+    .at-text.loading { font-style: italic; color: rgba(255,255,255,0.4); }
+
+    /* ── Next steps checklist ── */
+    .steps-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+      box-shadow: var(--shadow-sm);
+    }
+    .steps-card-title {
+      font-size: var(--text-base);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+    }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step-item:last-child { border-bottom: none; }
+    .step-check {
+      width: 18px; height: 18px;
+      border: 1.5px solid var(--border-dark);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; transition: var(--transition);
+      background: var(--bg-white); color: transparent;
+      margin-top: 2px;
+    }
+    .step-check.checked { background: var(--accent); border-color: var(--accent); color: white; }
+    .step-text { flex: 1; font-size: var(--text-sm); color: var(--text-primary); line-height: 1.5; }
+    .step-text.done { text-decoration: line-through; color: var(--text-muted); }
+
+    /* ── Achievement badges ── */
+    .badges-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      margin-bottom: var(--space-6);
+      box-shadow: var(--shadow-sm);
+    }
+    .badges-card-title {
+      font-size: var(--text-base);
+      font-weight: var(--weight-semibold);
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+    }
+    .badges-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-3);
+    }
+    .badge-item {
+      text-align: center;
+      padding: var(--space-4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+    }
+    .badge-item.earned {
+      background: var(--amber-50);
+      border-color: var(--amber-100);
+    }
+    .badge-item.locked { opacity: 0.4; filter: grayscale(0.8); }
+    .badge-item:hover { box-shadow: var(--shadow-sm); }
+    .badge-emoji { font-size: 28px; display: block; margin-bottom: var(--space-2); }
+    .badge-name  { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-primary); display: block; }
+    .badge-desc  { font-size: 10px; color: var(--text-muted); margin-top: 2px; display: block; }
+
+    @media (max-width: 768px) {
+      .rings-row    { grid-template-columns: 1fr 1fr 1fr; }
+      .report-stats { grid-template-columns: 1fr 1fr; }
+      .report-grid  { grid-template-columns: 1fr; }
+      .badges-grid  { grid-template-columns: repeat(3, 1fr); }
+      .pick-grid    { grid-template-columns: 1fr 1fr; }
+      .report-header { flex-direction: column; align-items: flex-start; gap: var(--space-4); }
+    }
+    @media (max-width: 480px) {
+      .rings-row  { grid-template-columns: 1fr; }
+      .badges-grid{ grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar"><div id="navbar"></div></nav>
+
+<div class="wrap">
+
+  <!-- Subject picker (shown when no subject selected) -->
+  <div class="subject-pick" id="subject-pick">
+    <h2>📋 Subject Reports</h2>
+    <p>Choose a subject to see your full detailed report.</p>
+    <div class="pick-grid" id="pick-grid"></div>
+  </div>
+
+  <!-- Report content (shown when subject selected) -->
+  <div class="report-content" id="report-content">
+
+    <!-- Header -->
+    <div class="report-header">
+      <div class="rh-left">
+        <span class="rh-icon" id="rh-icon">📐</span>
+        <div>
+          <div class="rh-name" id="rh-name">Mathematics</div>
+          <div class="rh-meta" id="rh-meta">Loading...</div>
+        </div>
+      </div>
+      <div class="rh-right">
+        <button class="btn btn-secondary btn-sm" onclick="showPicker()">← All Subjects</button>
+        <a href="quiz.html" id="rh-quiz-link" class="btn btn-primary btn-sm">Take Quiz →</a>
+      </div>
+    </div>
+
+    <!-- Circular rings -->
+    <div class="rings-row" id="rings-row"></div>
+
+    <!-- Stat cards -->
+    <div class="report-stats" id="report-stats"></div>
+
+    <!-- Line chart -->
+    <div class="chart-card">
+      <div class="chart-card-title">📈 Progress Over Time</div>
+      <div class="chart-svg-wrap" id="chart-wrap"></div>
+    </div>
+
+    <!-- Weak topics + Timeline -->
+    <div class="report-grid">
+      <div class="report-card">
+        <div class="report-card-title">⚠️ Weak Topics Breakdown</div>
+        <div class="weak-breakdown" id="weak-breakdown"></div>
+      </div>
+      <div class="report-card">
+        <div class="report-card-title">📅 Quiz History Timeline</div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+
+    <!-- AI tips -->
+    <div class="ai-tips-card">
+      <div class="at-header">
+        <span style="font-size:24px">🤖</span>
+        <span class="at-title">AI Personalised Tips</span>
+        <span class="at-badge">🧠 Hindsight powered</span>
+      </div>
+      <div class="at-text loading" id="at-text">Analysing your performance history...</div>
+    </div>
+
+    <!-- Next steps -->
+    <div class="steps-card">
+      <div class="steps-card-title">📌 Recommended Next Steps</div>
+      <div id="steps-list"></div>
+    </div>
+
+    <!-- Badges -->
+    <div class="badges-card">
+      <div class="badges-card-title">🏅 Achievement Badges</div>
+      <div class="badges-grid" id="badges-grid"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="js/main.js"></script>
+<script>
+
+let activeSubject = '';
+let stepsDone     = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!isOnboardingDone()) { window.location.href = 'onboarding.html'; return; }
+  buildNavbar('report');
+
+  // Check URL param
+  const urlSubject = new URLSearchParams(window.location.search).get('subject');
+  if (urlSubject && getSelectedSubjects().includes(urlSubject)) {
+    showReport(urlSubject);
+  } else {
+    buildPicker();
+  }
+});
+
+// ── Subject picker ──
+function buildPicker() {
+  const subjects = getSelectedSubjects();
+  const grid     = document.getElementById('pick-grid');
+  if (!grid) return;
+
+  document.getElementById('subject-pick').style.display = 'block';
+  document.getElementById('report-content').classList.remove('show');
+
+  grid.innerHTML = subjects.map(s => {
+    const acc = getOverallAccuracy(s);
+    const qc  = getQuizHistory(s).length;
+    return `
+      <a class="pick-card" onclick="showReport('${s}')">
+        <span class="pc-icon">${getSubjectIcon(s)}</span>
+        <span class="pc-name">${s}</span>
+        <span class="pc-acc">${acc}% · ${qc} quiz${qc !== 1 ? 'zes' : ''}</span>
+      </a>`;
+  }).join('');
+}
+
+function showPicker() {
+  document.getElementById('subject-pick').style.display = 'block';
+  document.getElementById('report-content').classList.remove('show');
+  history.pushState({}, '', 'report.html');
+}
+
+// ── Show report ──
+function showReport(subject) {
+  activeSubject = subject;
+  document.getElementById('subject-pick').style.display   = 'none';
+  document.getElementById('report-content').classList.add('show');
+
+  const history = getQuizHistory(subject);
+  const acc     = getOverallAccuracy(subject);
+  const best    = getBestScore(subject);
+  const latest  = getLatestAttempt(subject);
+  const imp     = getImprovement(subject);
+  const weak    = getWeakTopics(subject);
+  const qc      = history.length;
+
+  // Header
+  document.getElementById('rh-icon').textContent  = getSubjectIcon(subject);
+  document.getElementById('rh-name').textContent  = subject;
+  document.getElementById('rh-meta').textContent  = qc > 0
+    ? `${qc} quiz${qc !== 1 ? 'zes' : ''} · Started ${formatDate(history[0].date)} · Last quiz ${formatDate(history[history.length-1].date)}`
+    : 'No quizzes yet';
+  document.getElementById('rh-quiz-link').href = `quiz.html?subject=${encodeURIComponent(subject)}`;
+
+  renderRings(acc, best, latest ? latest.percentage : 0);
+  renderReportStats(subject, history, weak, imp);
+  renderLineChart(history);
+  renderWeakBreakdown(subject, weak);
+  renderTimeline(history);
+  loadAITips(subject);
+  renderNextSteps(subject, acc, weak);
+  renderBadges();
+}
+
+// ── Circular rings ──
+function renderRings(overall, best, latest) {
+  const wrap = document.getElementById('rings-row');
+  if (!wrap) return;
+
+  const rings = [
+    { pct: overall, label: 'Overall',  title: 'Overall Accuracy',  sub: 'All quizzes combined' },
+    { pct: best,    label: 'Best',     title: 'Best Score',        sub: 'Your highest ever' },
+    { pct: latest,  label: 'Latest',   title: 'Latest Quiz',       sub: 'Most recent attempt' },
+  ];
+
+  wrap.innerHTML = rings.map(r => {
+    const color = r.pct >= 75 ? 'var(--green-500)'
+                : r.pct >= 50 ? 'var(--accent)'
+                : r.pct >= 25 ? 'var(--amber-500)'
+                : 'var(--red-500)';
+
+    const size   = 100;
+    const stroke = 9;
+    const radius = (size - stroke) / 2;
+    const circ   = 2 * Math.PI * radius;
+    const offset = circ - (r.pct / 100) * circ;
+    const center = size / 2;
+
+    return `
+      <div class="ring-card">
+        <div class="ring-wrap">
+          <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+            <circle cx="${center}" cy="${center}" r="${radius}"
+              fill="none" stroke="var(--gray-100)" stroke-width="${stroke}"/>
+            <circle cx="${center}" cy="${center}" r="${radius}"
+              fill="none" stroke="${color}" stroke-width="${stroke}"
+              stroke-linecap="round"
+              stroke-dasharray="${circ}"
+              stroke-dashoffset="${offset}"
+              transform="rotate(-90 ${center} ${center})"
+              style="transition:stroke-dashoffset 1s ease"/>
+          </svg>
+          <div class="ring-center">
+            <span class="ring-pct">${r.pct}%</span>
+            <span class="ring-lbl">${r.label}</span>
+          </div>
+        </div>
+        <div class="ring-title">${r.title}</div>
+        <div class="ring-sub">${r.sub}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── Report stat cards ──
+function renderReportStats(subject, history, weak, imp) {
+  const wrap     = document.getElementById('report-stats');
+  if (!wrap) return;
+  const total    = history.reduce((s,a) => s + a.total, 0);
+  const correct  = history.reduce((s,a) => s + a.score, 0);
+  const streak   = getStreak();
+
+  const cards = [
+    { icon: '📝', val: history.length, label: 'Quizzes Taken' },
+    { icon: '✅', val: correct + '/' + total, label: 'Total Correct' },
+    { icon: '⚠️', val: weak.length, label: 'Weak Topics' },
+    { icon: '📈', val: imp !== null ? (imp >= 0 ? '+' + imp + '%' : imp + '%') : '—', label: 'Latest Change' },
+  ];
+
+  wrap.innerHTML = cards.map(c => `
+    <div class="rs-card">
+      <span class="rs-icon">${c.icon}</span>
+      <div class="rs-val">${c.val}</div>
+      <div class="rs-label">${c.label}</div>
+    </div>`).join('');
+}
+
+// ── Line chart (SVG) ──
+function renderLineChart(history) {
+  const wrap = document.getElementById('chart-wrap');
+  if (!wrap) return;
+
+  if (history.length < 2) {
+    wrap.innerHTML = '<div class="no-chart">Take at least 2 quizzes to see your progress chart!</div>';
+    return;
+  }
+
+  const W = 600, H = 160, pad = 40;
+  const pts = history.slice(-10);
+  const xStep = (W - pad * 2) / (pts.length - 1);
+
+  const points = pts.map((p, i) => ({
+    x: pad + i * xStep,
+    y: pad + (1 - p.percentage / 100) * (H - pad * 2),
+    pct: p.percentage,
+    date: p.date,
+  }));
+
+  const polyline = points.map(p => `${p.x},${p.y}`).join(' ');
+
+  // Area fill path
+  const areaPath = `M${points[0].x},${H - pad} ` +
+    points.map(p => `L${p.x},${p.y}`).join(' ') +
+    ` L${points[points.length-1].x},${H - pad} Z`;
+
+  const svg = `
+    <svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+      <!-- Grid lines -->
+      ${[0,25,50,75,100].map(v => {
+        const y = pad + (1 - v/100) * (H - pad*2);
+        return `
+          <line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}"
+            stroke="var(--gray-200)" stroke-width="1" stroke-dasharray="4 4"/>
+          <text x="${pad-8}" y="${y+4}" font-size="10" fill="var(--gray-400)"
+            text-anchor="end" font-family="var(--font)">${v}%</text>`;
+      }).join('')}
+
+      <!-- Area fill -->
+      <path d="${areaPath}" fill="var(--blue-500)" opacity="0.06"/>
+
+      <!-- Line -->
+      <polyline points="${polyline}"
+        fill="none" stroke="var(--accent)" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+      <!-- Data points -->
+      ${points.map((p,i) => {
+        const color = p.pct >= 75 ? 'var(--green-500)'
+                    : p.pct >= 50 ? 'var(--accent)'
+                    : 'var(--red-500)';
+        const label = formatDateShort(p.date);
+        return `
+          <circle cx="${p.x}" cy="${p.y}" r="5" fill="${color}" stroke="white" stroke-width="2"/>
+          <text x="${p.x}" y="${H - pad + 14}" font-size="10"
+            fill="var(--gray-400)" text-anchor="middle"
+            font-family="var(--font)">${label}</text>
+          <text x="${p.x}" y="${p.y - 10}" font-size="10"
+            fill="var(--text-secondary)" text-anchor="middle"
+            font-family="var(--font)" font-weight="500">${p.pct}%</text>`;
+      }).join('')}
+    </svg>`;
+
+  wrap.innerHTML = svg;
+}
+
+// ── Weak topics breakdown ──
+function renderWeakBreakdown(subject, weak) {
+  const wrap = document.getElementById('weak-breakdown');
+  if (!wrap) return;
+
+  if (weak.length === 0) {
+    wrap.innerHTML = '<p style="color:var(--text-muted);font-size:var(--text-sm)">No weak topics yet — great work!</p>';
+    return;
+  }
+
+  const counts  = weak.map(t => ({ t, c: getMistakeCount(subject, t) }));
+  const maxC    = Math.max(...counts.map(x => x.c), 1);
+
+  wrap.innerHTML = counts.map(({ t, c }) => `
+    <div class="wb-item">
+      <div class="wb-top">
+        <span class="wb-name">${t}</span>
+        <span class="wb-count">${c} mistake${c > 1 ? 's' : ''}</span>
+      </div>
+      <div class="wb-bar-wrap">
+        <div class="wb-bar-fill" style="width:${Math.round((c/maxC)*100)}%"></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Quiz history timeline ──
+function renderTimeline(history) {
+  const wrap = document.getElementById('timeline');
+  if (!wrap) return;
+
+  if (history.length === 0) {
+    wrap.innerHTML = '<p style="color:var(--text-muted);font-size:var(--text-sm)">No quiz history yet.</p>';
+    return;
+  }
+
+  const reversed = [...history].reverse().slice(0, 8);
+  wrap.innerHTML = reversed.map((a, i) => {
+    const prev  = reversed[i + 1];
+    const delta = prev ? a.percentage - prev.percentage : null;
+    const cls   = a.percentage >= 75 ? 'high' : a.percentage >= 50 ? 'medium' : 'low';
+    const deltaLabel = delta === null ? ''
+                     : delta > 0 ? `↑ +${delta}%`
+                     : delta < 0 ? `↓ ${delta}%`
+                     : '—';
+    const deltaClass = delta === null ? '' : delta > 0 ? 'up' : delta < 0 ? 'down' : '';
+
+    return `
+      <div class="tl-item">
+        <div class="tl-dot ${cls}"></div>
+        <div class="tl-body">
+          <div class="tl-date">${formatDate(a.date)}</div>
+          <div class="tl-score">${a.score} / ${a.total} correct</div>
+        </div>
+        <div class="tl-right">
+          <div class="tl-pct ${cls}">${a.percentage}%</div>
+          <div class="tl-delta ${deltaClass}">${deltaLabel}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── AI tips ──
+async function loadAITips(subject) {
+  const el = document.getElementById('at-text');
+  if (!el) return;
+
+  try {
+    const data = await apiCall('/api/ai/subject-tips', 'POST', {
+      user_id: getUserId(),
+      subject,
+    });
+    if (data && data.tip) {
+      el.textContent = data.tip;
+      el.classList.remove('loading');
+      return;
+    }
+  } catch (e) { /* fallback */ }
+
+  // Local fallback
+  const acc  = getOverallAccuracy(subject);
+  const weak = getWeakTopics(subject);
+  const imp  = getImprovement(subject);
+  const tips = [];
+
+  if (acc < 50)  tips.push(`Your overall accuracy in ${subject} is ${acc}% — focus on the basics first.`);
+  if (acc >= 75) tips.push(`Great work in ${subject}! You're at ${acc}% accuracy. Push for 90%+ by tackling harder questions.`);
+  if (weak.length > 0) tips.push(`Your weak spots are: ${weak.join(', ')}. Dedicate 10 minutes daily to each.`);
+  if (imp !== null && imp > 0) tips.push(`You improved by ${imp}% since your last quiz — excellent momentum! Keep the streak going.`);
+  if (imp !== null && imp < 0) tips.push(`Your score dropped by ${Math.abs(imp)}% — review your notes and try again tomorrow.`);
+  tips.push(`Consistent daily practice is more effective than long study sessions. Try 1 quiz per day in ${subject}.`);
+
+  el.textContent = tips.join(' ');
+  el.classList.remove('loading');
+}
+
+// ── Next steps ──
+function renderNextSteps(subject, acc, weak) {
+  const wrap  = document.getElementById('steps-list');
+  if (!wrap) return;
+
+  const key   = `steps_${subject}`;
+  stepsDone   = loadData(key, {});
+
+  const steps = [
+    `Take a quiz on ${subject} today`,
+    weak.length > 0 ? `Revise your weak topic: ${weak[0]}` : `Challenge yourself with harder ${subject} questions`,
+    `Score above ${Math.min(acc + 20, 100)}% on your next ${subject} quiz`,
+    acc >= 80 ? `Try a timed quiz in ${subject} to simulate exam pressure` : `Review your wrong answers from last quiz`,
+    `Write revision notes for your weak topics`,
+  ];
+
+  wrap.innerHTML = steps.map((s, i) => {
+    const done = stepsDone[i] || false;
+    return `
+      <div class="step-item">
+        <div class="step-check ${done ? 'checked' : ''}"
+          onclick="toggleStep(${i}, '${subject}')">${done ? '✓' : ''}</div>
+        <span class="step-text ${done ? 'done' : ''}">${s}</span>
+      </div>`;
+  }).join('');
+}
+
+function toggleStep(index, subject) {
+  const key = `steps_${subject}`;
+  stepsDone  = loadData(key, {});
+  stepsDone[index] = !stepsDone[index];
+  saveData(key, stepsDone);
+  if (stepsDone[index]) { addXP('goal_completed'); showToast('Step completed! +20 XP', 'success'); }
+  renderNextSteps(subject, getOverallAccuracy(subject), getWeakTopics(subject));
+}
+
+// ── Badges ──
+function renderBadges() {
+  const wrap   = document.getElementById('badges-grid');
+  const earned = getEarnedBadges();
+  if (!wrap) return;
+
+  wrap.innerHTML = ALL_BADGES.map(b => `
+    <div class="badge-item ${earned.includes(b.id) ? 'earned' : 'locked'}" title="${b.desc}">
+      <span class="badge-emoji">${b.icon}</span>
+      <span class="badge-name">${b.name}</span>
+      <span class="badge-desc">${earned.includes(b.id) ? '✅ Unlocked' : '🔒 Locked'}</span>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
